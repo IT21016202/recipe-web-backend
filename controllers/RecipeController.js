@@ -53,5 +53,25 @@ const getFavorites = async (req, res) => {
     }
 }
 
-module.exports = { getByCategory, addToFavorites, getFavorites };
+
+// Remove recipe from favorites
+const removeFavorites = async (req, res) => {
+    const userId = req.user.id;
+    const recipeId = req.params.id;
+
+    try {
+        const favorite = await Favorite.findOneAndDelete({ userId, recipeId });
+
+        if (!favorite) {
+            return res.status(404).json({ message: 'Favorite not found' });
+        }
+
+        res.status(200).json({ message: 'Favorite removed successfully' });
+    } catch (error) {
+        console.error('Error removing favorite:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+module.exports = { getByCategory, addToFavorites, getFavorites, removeFavorites };
 
