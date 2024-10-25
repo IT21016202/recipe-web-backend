@@ -1,18 +1,25 @@
 const User = require("../models/User");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
+const { check, validationResult } = require('express-validator');
+
+// Validation middleware
+const loginValidation = [
+    check('email').isEmail().withMessage('Please provide a valid email').normalizeEmail(),
+    check('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+const registerValidation = [
+    check('firstName').not().isEmpty().trim().escape().withMessage('First Name is required'),
+    check('lastName').trim().escape(),
+    check('phoneNumber').not().isEmpty().trim().escape().withMessage('Phone Number is required'),
+    check('email').isEmail().withMessage('Please provide a valid email').normalizeEmail(),
+    check('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+]; 
 
 // Register a new user
-const register =
-    [
-        body('firstName').trim().not().isEmpty().withMessage('First name is required').escape(),
-        body('lastName').trim().escape(),
-        body('phoneNumber').trim().isMobilePhone().withMessage('Invalid phone number'),
-        body('email').isEmail().withMessage('Please provide a valid email').normalizeEmail(),
-        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    ];
-async (req, res) => {
+const register = async (req, res) => {
+
+    // Validate user input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -57,17 +64,14 @@ async (req, res) => {
 
 
 // Login a user
-const login = 
-    [
-        body('email').isEmail().withMessage('Please provide a valid email').normalizeEmail(),
-        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    ]; 
-async (req, res) => {
+const login = async (req, res) => {
+
+    // Validate user input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    
+
     const { email, password } = req.body;
     try {
         let user = await User.findOne({ email });
@@ -96,4 +100,4 @@ async (req, res) => {
     }
 }
 
-module.exports = { register, login };
+module.exports = { register, login, loginValidation, registerValidation };
